@@ -22,8 +22,8 @@ class Pedido{
     public function CargarPedido(){
 
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO pedidos (idProducto, cantidad, idMesa, codigo, estado, tiempoAproximado, idMesero) 
-        VALUES (:idProducto, :cantidad, :idMesa, :codigo, :estado, :tiempoAproximado, :idMesero)");
+        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO pedidos (idProducto, cantidad, idMesa, codigo, estado, tiempoAproximado, idMesero, horarioCargado) 
+        VALUES (:idProducto, :cantidad, :idMesa, :codigo, :estado, :tiempoAproximado, :idMesero, :hora)");
         $consulta->bindValue(':idProducto', $this->idProducto);
         $consulta->bindValue(':cantidad', $this->cantidad);
         $consulta->bindValue(':idMesa', $this->idMesa);
@@ -31,6 +31,8 @@ class Pedido{
         $consulta->bindValue(':estado', $this->estado);
         $consulta->bindValue(':tiempoAproximado', $this->tiempo);
         $consulta->bindValue(':idMesero', $this->idMesero);
+        $hora= date("H:i");
+        $consulta->bindValue(':hora', $hora);
         $consulta->execute();
     }
 
@@ -73,10 +75,35 @@ class Pedido{
     public static function modificarPedido($tiempo, $estado, $id)
     {
         $objAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDato->prepararConsulta("UPDATE pedidos SET tiempoAproximado = :usuario, estado = :clave WHERE id = :id");
-        $consulta->bindValue(':usuario', $tiempo);
-        $consulta->bindValue(':clave', $estado);
-        $consulta->bindValue(':id', $id, PDO::PARAM_INT);
+        switch($estado){
+            case 'En preparacion':
+                $consulta = $objAccesoDato->prepararConsulta("UPDATE pedidos SET tiempoAproximado = :usuario, estado = :clave WHERE id = :id");
+                $consulta->bindValue(':usuario', $tiempo);
+                $consulta->bindValue(':clave', $estado);
+                $consulta->bindValue(':id', $id, PDO::PARAM_INT);
+                break;
+            case 'Listo':
+                $consulta = $objAccesoDato->prepararConsulta("SELECT horarioCargado,tiempoAproximado FROM pedidos WHERE id = :id");
+                $consulta->bindValue(':id', $id, PDO::PARAM_INT);
+                $consulta->execute();
+                $retorno=$consulta->fetch(PDO::FETCH_ASSOC);
+                date_default_timezone_set('America/Argentina/Buenos_Aires');
+                $horaActual= strtotime("now");
+                $horaCargado= strtotime($retorno['horarioCargado']);
+                $tiempoPretendido = strtotime($retorno['tiempoAproximado']);
+                $diferencia = $horaCargado - $horaActual;
+                $minutos = floor(($diferencia % 3600) / 60);
+                $minutosAproximado= floor(($tiempoPretendido %3600)/60);
+                $resultado = $minutosAproximado + $minutos;
+                if($resultado>= 0) echo 'esta a tiempo';
+                else echo 'esta atrazado';
+                $consulta = $objAccesoDato->prepararConsulta("UPDATE pedidos SET tiempoAproximado = :usuario, estado = :clave WHERE id = :id");
+                $consulta->bindValue(':usuario', $tiempo);
+                $consulta->bindValue(':clave', $estado);
+                $consulta->bindValue(':id', $id, PDO::PARAM_INT);
+                break;
+        }
+       
         $consulta->execute();
     }
 

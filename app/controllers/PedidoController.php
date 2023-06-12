@@ -55,6 +55,9 @@ class PedidoController implements ApiInterface{
             case 'socio':
                 $array= Pedido::TraerTodos("SELECT pedidos.id, productos.nombre as 'Producto' , productos.precio as 'Precio' ,pedidos.cantidad as 'Cantidad' , mesas.codigo as 'CodigoMesa', pedidos.codigo as 'CodigoPedido' , pedidos.estado as 'EstadoPedido', pedidos.tiempoAproximado FROM pedidos inner join productos on pedidos.idProducto= productos.id inner join mesas on pedidos.idMesa = mesas.id");
                 break;
+            case 'mozo':
+                $array= Pedido::TraerTodos("SELECT pedidos.id, productos.nombre as 'Producto' , productos.precio as 'Precio' ,pedidos.cantidad as 'Cantidad' , mesas.codigo as 'CodigoMesa', pedidos.codigo as 'CodigoPedido' , pedidos.estado as 'EstadoPedido', pedidos.tiempoAproximado FROM pedidos inner join productos on pedidos.idProducto= productos.id inner join mesas on pedidos.idMesa = mesas.id where pedidos.estado = 'Listo'");
+                break;
             default:
         }
         
@@ -76,7 +79,8 @@ class PedidoController implements ApiInterface{
 
         $usuario= Usuario::obtenerUsuario($parametros['idUsuario']);
 
-        Pedido::modificarPedido($parametros['tiempo'], "En preparacion", $parametros['idProducto']);
+        Pedido::modificarPedido($parametros['tiempo'], $parametros['estado'], $parametros['idPedido']);
+        
 
         $retorno= json_encode(array("Se actualizo el pedido, tiempo aproximado:" => $parametros['tiempo']));
 

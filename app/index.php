@@ -22,7 +22,7 @@ $dotenv->safeLoad();
 
 $app = AppFactory::create();
 
-$app->setBasePath('/tp/app');
+$app->setBasePath('/Tp_Programacion3/app');
 $app->addErrorMiddleware(true, true, true);
 
 $app->addBodyParsingMiddleware();
