@@ -35,7 +35,7 @@ class Mesa{
             $mesa= new Mesa();
             $mesa->id=$fila['id'];
             $mesa->codigo=$fila['codigo'];
-            $mesa->fecha=$fila['estado'];
+            $mesa->estado=$fila['estado'];
             array_push($mesas,$mesa);
         }
         return $mesas;

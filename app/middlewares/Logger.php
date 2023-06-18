@@ -7,43 +7,55 @@ class Logger
 {
     public function GenerarToken($request, $handler): ResponseMW {
 		$parametros= $request->getParsedBody();
-        $response= new ResponseMW();
-            $parametros = $request->getParsedBody();
-            $usuario= new Usuario();
+		$response= new ResponseMW();
+
+		if($request->getMethod()=="GET")
+		{
+		 $response->getBody()->write('<p>NO necesita credenciales para los get </p>');
+         $response= $handler->handle($request);
+		}else{
+			$parametros = $request->getParsedBody();
+			$usuario= new Usuario();
 			$usuario->usuario= $parametros['usuario'];
 			$usuario->clave= $parametros['clave'];
 			$usuario->tipo= $parametros['tipo'];
 			$datos = array('usuario' => $usuario->usuario,'perfil' => $usuario->tipo);
 			
 			$token= Autenticador::CrearToken($datos);
-            	  
-       //$response= new ResponseMW();
-	   echo "Token: " .  $token;
-	   	//$response->getBody()->write($token);
-		$response= $handler->handle($request);
-		 return $response;   
+					
+		//$response= new ResponseMW();
+			echo "Token: " .  $token;
+			//$response->getBody()->write($token);
+			$response= $handler->handle($request);
+		}
+		return $response;   
 	}
 
     public function VerificarToken($request, $handler): ResponseMW {
 		$objDelaRespuesta= new stdclass();
+		$seccion= self::Prueba($_SERVER['REQUEST_URI']);
 		$objDelaRespuesta->respuesta="";
 		$parametros= $request->getParsedBody();
 		$response= new ResponseMW();
-		if($request->getMethod()=="GET")
-		{
-		 $response->getBody()->write('<p>NO necesita credenciales para los get </p>');
-         $response= $handler->handle($request);
-		}
-		else{
-		if(!isset($parametros['token'])){
-			$usuario= Usuario::obtenerUsuario($parametros['id']);
-			$datos = array('usuario' => $usuario->usuario,'perfil' => $usuario->tipo);
-			$token= Autenticador::CrearToken($datos);
-		}else $token= $parametros['token'];
-		// $objDelaRespuesta->esValido=true; 
-
+		$token="";
 		try 
 		{
+			if($request->getMethod()=="GET")
+			{
+			$response->getBody()->write('<p>NO necesita credenciales para los get </p>');
+			$response= $handler->handle($request);
+			}
+			else{
+			if(!isset($parametros['token'])){
+				if(isset($parametros['id'])){
+					$usuario= Usuario::obtenerUsuario($parametros['id']);
+					if($usuario== false) throw new Exception("Error");
+					$datos = array('usuario' => $usuario->usuario,'perfil' => $usuario->tipo);
+					$token= Autenticador::CrearToken($datos);
+				}
+				
+			}else $token= $parametros['token'];
+		}
 			Autenticador::verificarToken($token);
 			$objDelaRespuesta->esValido=true;      
 		}
@@ -53,17 +65,31 @@ class Logger
 		}
 
 		if($objDelaRespuesta->esValido)
-		{						
+		{		
 			$payload=Autenticador::ObtenerData($token);
+			switch($seccion)	{
+				case 'mesa':
+					if($payload->perfil=="socio" || $payload->perfil == "mozo")
+					{
+						$response = $handler->handle($request);
+					}		           	
+					else
+					{	
+						$objDelaRespuesta->respuesta="Solo administradores";
+					}
+				default:
+				if($payload->perfil=="socio")
+				{
+					$response = $handler->handle($request);
+				}		           	
+				else
+				{	
+					$objDelaRespuesta->respuesta="Solo administradores";
+				}
+				break;
+			}			
 			//var_dump($payload);
-			if($payload->perfil=="socio")
-			{
-				$response = $handler->handle($request);
-			}		           	
-			else
-			{	
-				$objDelaRespuesta->respuesta="Solo administradores";
-			}		          
+				          
 		}    
 		else
 		{
@@ -71,10 +97,15 @@ class Logger
 			$objDelaRespuesta->respuesta="Solo usuarios registrados";
 			$objDelaRespuesta->elToken=$token;
 
-		}  	
-	}				
+		}  				
 	$response->getBody()->write($objDelaRespuesta->respuesta);
 	return $response;				
+	}
+
+	private function Prueba($string){
+		$array=explode("/",$string);
+
+		return $array[3];
 	}
 
 }

@@ -34,8 +34,9 @@ class Producto{
             $nombre= $fila['nombre'];
             $precio= $fila['precio'];
             $tipo= $fila['tipo'];
+            $cantidad= $fila['cantidad'];
             
-            $producto= new Producto($nombre,$precio,$tipo);
+            $producto= new Producto($nombre,$precio,$tipo,$cantidad);
 
             $producto->id= $id;
             array_push($productos,$producto);

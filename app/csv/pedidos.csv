@@ -1,0 +1,6 @@
+id,nombreProducto,precio,cantidad,codigoMesa,codigoPedido,estadoPedido
+4,Corona,1000,2,McKPg,Xq3Cu,Cobrado
+5,Corona,1000,9,McKPg,Xq3Cu,Cobrado
+6,Corona,1000,2,McKPg,Xq3Cu,Cobrado
+2,milanga,1000,2,McKPg,Xq3Cu,Cobrado
+3,milanga,1000,2,McKPg,Xq3Cu,Listo

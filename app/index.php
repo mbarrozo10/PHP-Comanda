@@ -18,6 +18,8 @@ require_once './controllers/ProductoController.php';
 require_once './controllers/MesaController.php';
 require_once './controllers/PedidoController.php';
 require_once './middlewares/Logger.php';
+require_once './controllers/GuardarController.php';
+
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->safeLoad();
 
@@ -37,13 +39,13 @@ $app->group('/usuarios', function (RouteCollectorProxy $group) {
 $app->group('/productos', function (RouteCollectorProxy $group){
   $group->get('[/]', \ProductoController::class . ':TraerTodos');
   $group->post('[/]', \ProductoController::class . ':CargarUno');
-});
+})->add(\Logger::class . ':VerificarToken');
 
 $app->group('/mesa', function (RouteCollectorProxy $group){
   $group->get('[/]', \MesaController::class . ':TraerTodos');
   $group->post('[/]', \MesaController::class . ':CargarUno');
   $group->post('/actualizar', \MesaController::class . ':Actualizar');
-});
+})->add(\Logger::class . ':VerificarToken');
 
 $app->group('/pedido', function (RouteCollectorProxy $group){
   $group->post('[/]', \PedidoController::class . ':CargarUno')->add(\PedidoController::class . ':VerificarStock');
@@ -51,11 +53,16 @@ $app->group('/pedido', function (RouteCollectorProxy $group){
   $group->get('/{codigoPedido}/{codigoMesa}', \PedidoController::class . ':TraerFiltrado');
   $group->get('/{id}', \PedidoController::class . ':TraerFiltrado');
   $group->get('[/]', \PedidoController::class . ':TraerTodos');
+  $group->post('/modificar', \PedidoController::class . ':AtenderPedido');
+
 });
 
-$app->group('/modificarPedido', function (RouteCollectorProxy $group){
-  $group->post('[/]', \PedidoController::class . ':AtenderPedido');
-});
+$app->group('/guardar', function (RouteCollectorProxy $group){
+  $group->post('/usuarios', \GuardarController::class . ':GuardarUsuarios');
+  $group->post('/mesas', \GuardarController::class . ':GuardarMesas');
+  $group->post('/pedidos', \GuardarController::class . ':GuardarPedidos');
+  $group->post('/productos', \GuardarController::class . ':GuardarProductos');
+})->add(\Logger::class . ':VerificarToken');
 //agregar middleware de logueo
 
 $app->run();
