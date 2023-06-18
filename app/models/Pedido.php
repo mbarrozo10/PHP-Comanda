@@ -41,10 +41,14 @@ class Pedido{
         $consulta = $objAccesoDatos->prepararConsulta($pedido);
         $consulta->execute();
         $pedidos= array();
-
-        while($fila = $consulta->fetch(PDO::FETCH_ASSOC)){
-            array_push($pedidos,$fila);
+        if($consulta->rowCount()==1){
+            return $fila = $consulta->fetch(PDO::FETCH_ASSOC) ;
+        }else{
+            while($fila = $consulta->fetch(PDO::FETCH_ASSOC)){
+                array_push($pedidos,$fila);
+            }
         }
+        
 
         return $pedidos;
     }
@@ -95,15 +99,37 @@ class Pedido{
                 $minutos = floor(($diferencia % 3600) / 60);
                 $minutosAproximado= floor(($tiempoPretendido %3600)/60);
                 $resultado = $minutosAproximado + $minutos;
-                if($resultado>= 0) echo 'esta a tiempo';
-                else echo 'esta atrazado';
+               
                 $consulta = $objAccesoDato->prepararConsulta("UPDATE pedidos SET tiempoAproximado = :usuario, estado = :clave WHERE id = :id");
                 $consulta->bindValue(':usuario', $tiempo);
                 $consulta->bindValue(':clave', $estado);
                 $consulta->bindValue(':id', $id, PDO::PARAM_INT);
+                $consulta->execute();
+                if($resultado>= 0) {
+                    $consulta = $objAccesoDato->prepararConsulta("UPDATE pedidos SET ATiempo = true WHERE id = :id");
+                    $consulta->bindValue(':id', $id, PDO::PARAM_INT);
+                }
+                else {
+                    $consulta = $objAccesoDato->prepararConsulta("UPDATE pedidos SET ATiempo = false WHERE id = :id");
+                    $consulta->bindValue(':id', $id, PDO::PARAM_INT);}
                 break;
         }
        
+        $consulta->execute();
+    }
+    public static function DescontarStock($id,$cantidad)
+    {
+        $objAccesoDato = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDato->prepararConsulta("UPDATE productos SET cantidad = :usuario WHERE id = :id");
+        $consulta->bindValue(':usuario', $cantidad);
+        $consulta->bindValue(':id', $id);
+        $consulta->execute();
+    }
+
+    public static function ConsultaActualizar($id, $pedido){
+        $objAccesoDato = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDato->prepararConsulta($pedido);
+        $consulta->bindValue(':id', $id);
         $consulta->execute();
     }
 

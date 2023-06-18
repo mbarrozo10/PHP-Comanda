@@ -7,7 +7,7 @@ class UsuarioController extends Usuario implements ApiInterface
     public function CargarUno($request, $response, $args)
     {
         $parametros = $request->getParsedBody();
-
+       
         $user = $parametros['usuario'];
         $clave = $parametros['clave'];
         $tipo = $parametros['tipo'];
@@ -36,31 +36,4 @@ class UsuarioController extends Usuario implements ApiInterface
           ->withHeader('Content-Type', 'application/json');
     }
     
-    public function ModificarUno($request, $response, $args)
-    {
-        $parametros = $request->getParsedBody();
-
-        $nombre = $parametros['nombre'];
-        Usuario::modificarUsuario($nombre);
-
-        $payload = json_encode(array("mensaje" => "Usuario modificado con exito"));
-
-        $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json');
-    }
-
-    public function BorrarUno($request, $response, $args)
-    {
-        $parametros = $request->getParsedBody();
-
-        $usuarioId = $parametros['usuarioId'];
-        Usuario::borrarUsuario($usuarioId);
-
-        $payload = json_encode(array("mensaje" => "Usuario borrado con exito"));
-
-        $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json');
-    }
 }

@@ -2,7 +2,8 @@
 require_once './models/Pedido.php'; 
 require_once './interfaces/ApiInterface.php';
 require_once './models/Usuario.php';
- 
+use Slim\Psr7\Response as ResponseMW;
+
 class PedidoController implements ApiInterface{
 
 	public function TraerTodos($request, $response, $args){
@@ -31,6 +32,7 @@ class PedidoController implements ApiInterface{
             move_uploaded_file($foto['tmp_name'],$ruta);
         }
         
+        
         $retorno = json_encode(array("Pedido Realizado correctamente con el codigo:" => $codigo));
 
         $response->getBody()->write($retorno);
@@ -44,13 +46,13 @@ class PedidoController implements ApiInterface{
         $usuario= Usuario::obtenerUsuario($args['id']);
         switch ($usuario->tipo) {
             case 'cocinero':
-                $array= Pedido::TraerTodos("SELECT pedidos.id, productos.nombre as 'Producto' , productos.precio as 'Precio' ,pedidos.cantidad as 'Cantidad' , mesas.codigo as 'CodigoMesa', pedidos.codigo as 'CodigoPedido' , pedidos.estado as 'EstadoPedido', pedidos.tiempoAproximado FROM pedidos inner join productos on pedidos.idProducto= productos.id inner join mesas on pedidos.idMesa = mesas.id where productos.tipo = 'comida'");
+                $array= Pedido::TraerTodos("SELECT pedidos.id, productos.nombre as 'Producto' , productos.precio as 'Precio' ,pedidos.cantidad as 'Cantidad' , mesas.codigo as 'CodigoMesa', pedidos.codigo as 'CodigoPedido' , pedidos.estado as 'EstadoPedido', pedidos.tiempoAproximado FROM pedidos inner join productos on pedidos.idProducto= productos.id inner join mesas on pedidos.idMesa = mesas.id where productos.tipo = 'comida' and pedidos.estado != 'Cobrado'");
                 break;
             case 'bartender' :
-                $array= Pedido::TraerTodos("SELECT pedidos.id, productos.nombre as 'Producto' , productos.precio as 'Precio' ,pedidos.cantidad as 'Cantidad' , mesas.codigo as 'CodigoMesa', pedidos.codigo as 'CodigoPedido' , pedidos.estado as 'EstadoPedido', pedidos.tiempoAproximado FROM pedidos inner join productos on pedidos.idProducto= productos.id inner join mesas on pedidos.idMesa = mesas.id where productos.tipo = 'bebida'");
+                $array= Pedido::TraerTodos("SELECT pedidos.id, productos.nombre as 'Producto' , productos.precio as 'Precio' ,pedidos.cantidad as 'Cantidad' , mesas.codigo as 'CodigoMesa', pedidos.codigo as 'CodigoPedido' , pedidos.estado as 'EstadoPedido', pedidos.tiempoAproximado FROM pedidos inner join productos on pedidos.idProducto= productos.id inner join mesas on pedidos.idMesa = mesas.id where productos.tipo = 'bebida' and pedidos.estado != 'Cobrado'");
                 break;
             case 'cervecero':
-                $array= Pedido::TraerTodos("SELECT pedidos.id, productos.nombre as 'Producto' , productos.precio as 'Precio' ,pedidos.cantidad as 'Cantidad' , mesas.codigo as 'CodigoMesa', pedidos.codigo as 'CodigoPedido' , pedidos.estado as 'EstadoPedido', pedidos.tiempoAproximado FROM pedidos inner join productos on pedidos.idProducto= productos.id inner join mesas on pedidos.idMesa = mesas.id where productos.tipo = 'cerveza'");
+                $array= Pedido::TraerTodos("SELECT pedidos.id, productos.nombre as 'Producto' , productos.precio as 'Precio' ,pedidos.cantidad as 'Cantidad' , mesas.codigo as 'CodigoMesa', pedidos.codigo as 'CodigoPedido' , pedidos.estado as 'EstadoPedido', pedidos.tiempoAproximado FROM pedidos inner join productos on pedidos.idProducto= productos.id inner join mesas on pedidos.idMesa = mesas.id where productos.tipo = 'cerveza' and pedidos.estado != 'Cobrado'");
                 break;
             case 'socio':
                 $array= Pedido::TraerTodos("SELECT pedidos.id, productos.nombre as 'Producto' , productos.precio as 'Precio' ,pedidos.cantidad as 'Cantidad' , mesas.codigo as 'CodigoMesa', pedidos.codigo as 'CodigoPedido' , pedidos.estado as 'EstadoPedido', pedidos.tiempoAproximado FROM pedidos inner join productos on pedidos.idProducto= productos.id inner join mesas on pedidos.idMesa = mesas.id");
@@ -67,10 +69,13 @@ class PedidoController implements ApiInterface{
         $codigoMesa= $args['codigoMesa'];
         $codigoPedido= $args['codigoPedido'];
         $array= Pedido::TraerTodos("SELECT pedidos.id, productos.nombre as 'Producto' , productos.precio as 'Precio' ,pedidos.cantidad as 'Cantidad' , mesas.codigo as 'CodigoMesa', pedidos.codigo as 'CodigoPedido' , pedidos.estado as 'EstadoPedido', pedidos.tiempoAproximado FROM pedidos inner join productos on pedidos.idProducto= productos.id inner join mesas on pedidos.idMesa = mesas.id where mesas.codigo= '{$codigoMesa}' and pedidos.codigo= '{$codigoPedido}'");
+        $tiempoEsperado= Pedido::TraerTodos("SELECT MAX(pedidos.tiempoAproximado) as 'tiempoAproximado' FROM pedidos inner join productos on pedidos.idProducto= productos.id inner join mesas on pedidos.idMesa = mesas.id where mesas.codigo= '{$codigoMesa}' and pedidos.codigo= '{$codigoPedido}'");
+        $retorno= json_encode($tiempoEsperado);
+        $response->getBody()->write($retorno);
     }
         $retorno= json_encode(array("Los pedidos de $usuario->usuario <br/>"=>$array));
-
         $response->getBody()->write($retorno);
+        
         return $response;
     }
 
@@ -78,7 +83,6 @@ class PedidoController implements ApiInterface{
         $parametros= $request->getParsedBody();
 
         $usuario= Usuario::obtenerUsuario($parametros['idUsuario']);
-
         Pedido::modificarPedido($parametros['tiempo'], $parametros['estado'], $parametros['idPedido']);
         
 
@@ -88,6 +92,40 @@ class PedidoController implements ApiInterface{
 
         return $response;
 
+    }
+
+    public function VerificarStock($request, $handler) : ResponseMW{
+        $response= new ResponseMW();
+        $parametros= $request->getParsedBody();
+        if($request->getMethod() == 'POST'){
+            $retorno= Pedido::TraerTodos("SELECT cantidad FROM productos where id= {$parametros['producto']}");
+            if($retorno["cantidad"] >= $parametros['cantidad']){
+                Pedido::DescontarStock($parametros['producto'],$retorno['cantidad']- $parametros['cantidad']);
+                $response= $handler->handle($request);
+            }  
+            else $response->getBody()->write("No hay stock ");
+        }else{
+            $response= $handler->handle($request);
+        }
+        return $response;
+    }
+
+    public function Cobrar($request, $response){
+        $parametros= $request->getParsedBody();
+        
+        $pedidos= Pedido::TraerTodos("SELECT pedidos.id, productos.precio as precioProductos, pedidos.cantidad as cantidad, pedidos.idMesa from pedidos
+        inner join productos on pedidos.idProducto= productos.id inner join mesas on mesas.id = pedidos.idMesa where mesas.id= {$parametros['id']}");
+        $totalApagar=0;
+        $idMesa=0;
+        foreach($pedidos as $pedido){
+            $totalApagar+= $pedido['precioProductos']* $pedido['cantidad'];
+            Pedido::ConsultaActualizar($pedido['id'], "UPDATE pedidos SET estado = 'Cobrado' WHERE id = :id");
+            $idMesa= $pedido['idMesa'];
+        }
+        Pedido::ConsultaActualizar($idMesa, "UPDATE mesas SET estado = 'Vacia' WHERE id = :id");
+        $response->getBody()->write("Total a pagar: ". $totalApagar);
+
+        return $response;
     }
 }
 ?>

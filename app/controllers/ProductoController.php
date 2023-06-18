@@ -7,7 +7,7 @@ class ProductoController implements ApiInterface {
     public function CargarUno($request, $response, $args){
         $parametros = $request->getParsedBody();
 
-        $producto= new Producto($parametros['nombre'], $parametros['precio'], $parametros['tipo']);
+        $producto= new Producto($parametros['nombre'], $parametros['precio'], $parametros['tipo'], $parametros['cantidad']);
 
         $producto->CargarABd($producto);
 

@@ -40,5 +40,26 @@ class Mesa{
         }
         return $mesas;
     }
+
+    public static function ActualizarMesa($id){
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT pedidos.estado FROM pedidos INNER JOIN mesas on pedidos.idMesa= mesas.id where pedidos.idMesa = '$id'");
+        $consulta->execute();
+        $flag=false;
+        
+        while($mesa= $consulta->fetch(PDO::FETCH_ASSOC)){
+            if($mesa['estado']!= "Listo"){
+                $flag= true;
+                break;
+            }
+        }
+        if(!$flag) {
+            $objAccesoDatos = AccesoDatos::obtenerInstancia();
+            $consulta = $objAccesoDatos->prepararConsulta("UPDATE mesas SET estado= 'Comiendo' where id = '$id'");
+            $consulta->execute();
+            return true;
+        }
+        return false;
+    }
 }
 ?>

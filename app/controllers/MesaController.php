@@ -32,4 +32,12 @@ class MesaController implements ApiInterface{
 
         return $response;
     }
+    public function Actualizar($request, $response, $args){
+        $parametro= $request->getParsedBody();
+        
+        if(Mesa::ActualizarMesa($parametro['id'])){
+            $response->getBody()->write("Se actualizo el pedido");
+        }else $response->getBody()->write("Algun pedido esta sin hacer ");
+        return $response;
+    }
 }
