@@ -133,5 +133,17 @@ class Pedido{
         $consulta->execute();
     }
 
+    public static function ConseguirDatos($fila){
+        $objAccesoDatos= AccesoDatos::obtenerInstancia();
+        echo $fila[4];
+        // $consulta = $objAccesoDatos->prepararConsulta("SELECT id as idProducto from productos WHERE nombre = '{$fila[1]}' cross join ( SELECT id as idMesa FROM mesas WHERE codigo = '{$fila[4]}') ");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT G.idProducto, I.idMesa from (select id idProducto from productos where nombre= '{$fila[1]}') G cross join ( SELECT id idMesa FROM mesas WHERE codigo = '{$fila[4]}') I ");
+        $consulta->execute();
+        $dato = $consulta->fetch(PDO::FETCH_ASSOC);
+        $pedido = new Pedido($dato['idProducto'],$fila[3],$dato['idMesa'],$fila[5],$fila[6],$fila[7]);
+        return $pedido;
+    }
+
+
 }
 ?>

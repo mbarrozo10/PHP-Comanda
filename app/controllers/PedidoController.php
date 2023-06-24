@@ -63,20 +63,11 @@ class PedidoController implements ApiInterface{
             default:
         }
         
-    }else{
-        $usuario= new stdClass();
-        $usuario->usuario="Cliente";
-        $codigoMesa= $args['codigoMesa'];
-        $codigoPedido= $args['codigoPedido'];
-        $array= Pedido::TraerTodos("SELECT pedidos.id, productos.nombre as 'Producto' , productos.precio as 'Precio' ,pedidos.cantidad as 'Cantidad' , mesas.codigo as 'CodigoMesa', pedidos.codigo as 'CodigoPedido' , pedidos.estado as 'EstadoPedido', pedidos.tiempoAproximado FROM pedidos inner join productos on pedidos.idProducto= productos.id inner join mesas on pedidos.idMesa = mesas.id where mesas.codigo= '{$codigoMesa}' and pedidos.codigo= '{$codigoPedido}'");
-        $tiempoEsperado= Pedido::TraerTodos("SELECT MAX(pedidos.tiempoAproximado) as 'tiempoAproximado' FROM pedidos inner join productos on pedidos.idProducto= productos.id inner join mesas on pedidos.idMesa = mesas.id where mesas.codigo= '{$codigoMesa}' and pedidos.codigo= '{$codigoPedido}'");
-        $retorno= json_encode($tiempoEsperado);
-        $response->getBody()->write($retorno);
     }
-        $retorno= json_encode(array("Los pedidos de $usuario->usuario <br/>"=>$array));
-        $response->getBody()->write($retorno);
-        
-        return $response;
+    $retorno= json_encode(array("Los pedidos de $usuario->usuario <br/>"=>$array));
+    $response->getBody()->write($retorno);
+    
+    return $response;
     }
 
     public function AtenderPedido($request, $response, $args){

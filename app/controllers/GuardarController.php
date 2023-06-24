@@ -52,10 +52,10 @@
             }
         public function GuardarPedidos($request, $response){
             try{
-                $usuarios= Pedido::TraerTodos("SELECT pedidos.id, productos.nombre as 'Producto' , productos.precio as 'Precio' ,pedidos.cantidad as 'Cantidad' , mesas.codigo as 'CodigoMesa', pedidos.codigo as 'CodigoPedido' , pedidos.estado as 'EstadoPedido' FROM pedidos inner join productos on pedidos.idProducto= productos.id inner join mesas on pedidos.idMesa = mesas.id");
+                $usuarios= Pedido::TraerTodos("SELECT pedidos.id, productos.nombre as 'Producto' , productos.precio as 'Precio' ,pedidos.cantidad as 'Cantidad' , mesas.codigo as 'CodigoMesa', pedidos.codigo as 'CodigoPedido' , pedidos.estado as 'EstadoPedido', idMesero FROM pedidos inner join productos on pedidos.idProducto= productos.id inner join mesas on pedidos.idMesa = mesas.id");
                 $archivo= fopen('./csv/pedidos.csv', 'w');
     
-                $datos= array('id', 'nombreProducto','precio', 'cantidad', 'codigoMesa' , 'codigoPedido', 'estadoPedido',);
+                $datos= array('id', 'nombreProducto','precio', 'cantidad', 'codigoMesa' , 'codigoPedido', 'estadoPedido','idMesero');
                 fputcsv($archivo, $datos);
     
                 foreach($usuarios as $users){

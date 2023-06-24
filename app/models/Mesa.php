@@ -61,5 +61,12 @@ class Mesa{
         }
         return false;
     }
+
+    public static function CerrarMesa($id){
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("UPDATE mesas set estado= 'Cerrada' where id = '$id'");
+        $consulta->execute();
+        return true;
+    }
 }
 ?>

@@ -31,6 +31,23 @@ class Logger
 		return $response;   
 	}
 
+	public function Login($request, $handler) : ResponseMW{
+		$parametros= $request->getParsedBody();
+		$response = new ResponseMW();
+		if(isset($parametros['usuario'])){
+			$usuario= Usuario::obtenerUsuario($parametros['usuario']);
+			if($usuario){
+				$datos = array('usuario' => $usuario->usuario,'perfil' => $usuario->tipo);
+				$token= Autenticador::CrearToken($datos);
+				$response->getBody()->write("Login exitoso, su token es: \n" . $token);
+			}else{
+				$response->getBody()->write("No existe ninguna cuenta con ese usuario.");
+			}
+		}else $response->getBody()->write("No ingreso el usuario.");
+
+		return $response;
+	}
+
     public function VerificarToken($request, $handler): ResponseMW {
 		$objDelaRespuesta= new stdclass();
 		$seccion= self::Prueba($_SERVER['REQUEST_URI']);
@@ -44,20 +61,22 @@ class Logger
 			{
 			$response->getBody()->write('<p>NO necesita credenciales para los get </p>');
 			$response= $handler->handle($request);
+			return $response;
 			}
 			else{
-			if(!isset($parametros['token'])){
-				if(isset($parametros['id'])){
-					$usuario= Usuario::obtenerUsuario($parametros['id']);
-					if($usuario== false) throw new Exception("Error");
-					$datos = array('usuario' => $usuario->usuario,'perfil' => $usuario->tipo);
-					$token= Autenticador::CrearToken($datos);
-				}
-				
-			}else $token= $parametros['token'];
-		}
-			Autenticador::verificarToken($token);
-			$objDelaRespuesta->esValido=true;      
+			// if(!isset($parametros['token'])){
+			// 		// $usuario= Usuario::obtenerUsuario($parametros['id']);
+			// 		// if($usuario== false) throw new Exception("Error");
+			// 		// $datos = array('usuario' => $usuario->usuario,'perfil' => $usuario->tipo);
+			// 		// $token= Autenticador::CrearToken($datos);				
+			// }else
+			if(isset($parametros['token'])){
+				$token= $parametros['token'];
+				Autenticador::verificarToken($token);
+				$objDelaRespuesta->esValido=true;   
+			}  else $objDelaRespuesta->esValido=false;
+	}
+
 		}
 		catch (Exception $e) {      
 			$objDelaRespuesta->excepcion=$e->getMessage();
@@ -70,13 +89,13 @@ class Logger
 			switch($seccion)	{
 				case 'mesa':
 					if($payload->perfil=="socio" || $payload->perfil == "mozo")
-					{
-						$response = $handler->handle($request);
-					}		           	
-					else
-					{	
+						$response = $handler->handle($request);           	
+					else	
 						$objDelaRespuesta->respuesta="Solo administradores";
-					}
+				case 'pedido':
+					if($payload->perfil=="socio" || $payload->perfil == "cocinero" || $payload->perfil == "bartender" || $payload->perfil == "cervecero")
+						$response = $handler->handle($request);	           	
+					else $objDelaRespuesta->respuesta="Solo administradores";
 				default:
 				if($payload->perfil=="socio")
 				{

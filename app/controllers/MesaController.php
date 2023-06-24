@@ -21,7 +21,7 @@ class MesaController implements ApiInterface{
         
         if($mesa->ComprobarCodigo($codigo)){
             $mesa->codigo= $codigo;
-            $mesa->estado= "Libre";
+            $mesa->estado= "Vacia";
             $mesa->CargarMesa();
             $retorno= json_encode(array('Mesa cargada' => $mesa->codigo));
         }
@@ -38,6 +38,15 @@ class MesaController implements ApiInterface{
         if(Mesa::ActualizarMesa($parametro['idMesa'])){
             $response->getBody()->write("Se actualizo el pedido");
         }else $response->getBody()->write("Algun pedido esta sin hacer ");
+        return $response;
+    }
+    public function CerrarMesa($request, $response, $args){
+        $parametro= $request->getParsedBody();
+        
+        if(Mesa::CerrarMesa($parametro['idMesa'])){
+            $response->getBody()->write("Se Cerro la mesa");
+        }
+
         return $response;
     }
 }
