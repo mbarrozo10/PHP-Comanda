@@ -93,9 +93,7 @@ class Logger
 					else	
 						$objDelaRespuesta->respuesta="Solo administradores";
 				case 'pedido':
-					if($payload->perfil=="socio" || $payload->perfil == "cocinero" || $payload->perfil == "bartender" || $payload->perfil == "cervecero")
 						$response = $handler->handle($request);	           	
-					else $objDelaRespuesta->respuesta="Solo administradores";
 				default:
 				if($payload->perfil=="socio")
 				{
