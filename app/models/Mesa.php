@@ -43,7 +43,7 @@ class Mesa{
 
     public static function ActualizarMesa($id){
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT pedidos.estado FROM pedidos INNER JOIN mesas on pedidos.idMesa= mesas.id where pedidos.idMesa = '$id'");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT pedidos.estado FROM pedidos INNER JOIN mesas on pedidos.idMesa= mesas.id where pedidos.idMesa = '$id' and pedidos.estado != 'Cobrado'");
         $consulta->execute();
         $flag=false;
         

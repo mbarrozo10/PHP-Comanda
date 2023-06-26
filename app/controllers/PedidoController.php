@@ -75,7 +75,6 @@ class PedidoController implements ApiInterface{
 
         $usuario= Usuario::obtenerUsuario($parametros['idUsuario']);
         Pedido::modificarPedido($parametros['tiempo'], $parametros['estado'], $parametros['idPedido']);
-        
 
         $retorno= json_encode(array("Se actualizo el pedido, tiempo aproximado:" => $parametros['tiempo']));
 
@@ -90,8 +89,9 @@ class PedidoController implements ApiInterface{
         $parametros= $request->getParsedBody();
         if($request->getMethod() == 'POST'){
             $retorno= Pedido::TraerTodos("SELECT cantidad FROM productos where id= {$parametros['producto']}");
-            if($retorno["cantidad"] >= $parametros['cantidad']){
-                Pedido::DescontarStock($parametros['producto'],$retorno['cantidad']- $parametros['cantidad']);
+            $cantidad= $retorno[0];
+            if($cantidad['cantidad'] >= $parametros['cantidad']){
+                Pedido::DescontarStock($parametros['producto'],$cantidad['cantidad']- $parametros['cantidad']);
                 $response= $handler->handle($request);
             }  
             else $response->getBody()->write("No hay stock ");
@@ -105,7 +105,7 @@ class PedidoController implements ApiInterface{
         $parametros= $request->getParsedBody();
         
         $pedidos= Pedido::TraerTodos("SELECT pedidos.id, productos.precio as precioProductos, pedidos.cantidad as cantidad, pedidos.idMesa from pedidos
-        inner join productos on pedidos.idProducto= productos.id inner join mesas on mesas.id = pedidos.idMesa where mesas.id= {$parametros['id']}");
+        inner join productos on pedidos.idProducto= productos.id inner join mesas on mesas.id = pedidos.idMesa where pedidos.codigo= '{$parametros['codigo']}'");
         $totalApagar=0;
         $idMesa=0;
         foreach($pedidos as $pedido){

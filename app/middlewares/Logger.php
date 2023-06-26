@@ -93,7 +93,8 @@ class Logger
 					else	
 						$objDelaRespuesta->respuesta="Solo administradores";
 				case 'pedido':
-						$response = $handler->handle($request);	           	
+						$response = $handler->handle($request);	   
+						break;        	
 				default:
 				if($payload->perfil=="socio")
 				{

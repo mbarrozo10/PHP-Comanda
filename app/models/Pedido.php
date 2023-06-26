@@ -41,14 +41,9 @@ class Pedido{
         $consulta = $objAccesoDatos->prepararConsulta($pedido);
         $consulta->execute();
         $pedidos= array();
-        if($consulta->rowCount()==1){
-            return $fila = $consulta->fetch(PDO::FETCH_ASSOC) ;
-        }else{
             while($fila = $consulta->fetch(PDO::FETCH_ASSOC)){
                 array_push($pedidos,$fila);
-            }
-        }
-        
+            }        
 
         return $pedidos;
     }
@@ -61,13 +56,13 @@ class Pedido{
 
         if($consulta->rowCount() > 0){
             $fila = $consulta->fetch(PDO::FETCH_ASSOC);
-            if($fila['estado'] == "Libre"){
+            if($fila['estado'] == "Vacia"){
                 $consulta= $objAccesoDatos->prepararConsulta("UPDATE mesas set estado = 'con cliente esperando pedido' where id= :id"); 
                 $consulta->bindValue(":id",$idMesa);
                 $consulta->execute();
                 return true;
             }else {
-                $consulta= $objAccesoDatos->prepararConsulta("Select codigo from pedidos where idMesa= :id"); 
+                $consulta= $objAccesoDatos->prepararConsulta("Select codigo from pedidos where idMesa= :id and estado != 'Cobrado'"); 
                 $consulta->bindValue(":id",$idMesa);
                 $consulta->execute();
                 $dato= $consulta->fetch(PDO::FETCH_ASSOC);
@@ -143,7 +138,6 @@ class Pedido{
         $pedido = new Pedido($dato['idProducto'],$fila[3],$dato['idMesa'],$fila[5],$fila[6],$fila[7]);
         return $pedido;
     }
-
 
 }
 ?>
